@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoneyFlow - Expense Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0f172a;--card:#111827;--card2:#1f2937;--text:#f8fafc;--muted:#94a3b8;
+      --accent:#fb923c;--accent2:#38bdf8;--green:#22c55e;--red:#ef4444;--border:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;background:linear-gradient(160deg,#020617,#111827 45%,#1e293b);color:var(--text);min-height:100vh}
+    .app{max-width:1120px;margin:0 auto;padding:18px 14px 90px}.hero{padding:22px;border:1px solid var(--border);border-radius:28px;background:radial-gradient(circle at top right,rgba(251,146,60,.28),transparent 35%),linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));box-shadow:0 20px 50px rgba(0,0,0,.28)}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.badge{padding:8px 12px;border-radius:999px;background:rgba(251,146,60,.15);color:#fed7aa;font-size:13px;border:1px solid rgba(251,146,60,.25)}
+    h1{font-size:32px;margin:14px 0 8px;letter-spacing:-.04em}.sub{color:var(--muted);line-height:1.5;margin:0}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}.card{background:rgba(15,23,42,.72);border:1px solid var(--border);border-radius:24px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,.22);backdrop-filter:blur(14px)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:20px;padding:14px}.stat small{color:var(--muted)}.stat b{display:block;font-size:24px;margin-top:8px}.inputrow{display:grid;grid-template-columns:1fr auto;gap:10px}.input,select{width:100%;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.06);color:var(--text);padding:14px;font-size:15px;outline:none}.input::placeholder{color:#64748b}select option{background:#111827}.btn{border:0;border-radius:18px;background:linear-gradient(135deg,var(--accent),#f97316);color:#111827;font-weight:800;padding:14px 16px;cursor:pointer;box-shadow:0 10px 26px rgba(249,115,22,.26)}.btn.secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border);box-shadow:none}.btn.danger{background:rgba(239,68,68,.14);color:#fecaca;border:1px solid rgba(239,68,68,.25);box-shadow:none}
+    .formgrid{display:grid;grid-template-columns:1fr 120px 150px;gap:10px;margin-top:10px}.drop{border:1px dashed rgba(255,255,255,.2);background:rgba(255,255,255,.04);border-radius:22px;padding:18px;text-align:center;color:var(--muted);margin-top:12px}.drop input{display:none}.preview{max-width:100%;border-radius:18px;margin-top:12px;display:none}.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.section-title h2{font-size:18px;margin:0}.pill{font-size:12px;color:#cbd5e1;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:999px;padding:6px 10px}.list{display:flex;flex-direction:column;gap:10px;max-height:390px;overflow:auto}.item{display:flex;justify-content:space-between;gap:12px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:18px;padding:12px}.item .left{display:flex;gap:10px;align-items:center}.emoji{width:38px;height:38px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.08)}.name{font-weight:700}.meta{font-size:12px;color:var(--muted);margin-top:3px}.amount{font-weight:900}.mini{font-size:11px;color:var(--muted);margin-top:4px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.hint{font-size:13px;color:var(--muted);line-height:1.45;margin-top:10px}.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:8px;background:rgba(2,6,23,.82);border:1px solid var(--border);backdrop-filter:blur(18px);border-radius:999px;padding:8px;z-index:5}.bottomnav a{color:#cbd5e1;text-decoration:none;padding:10px 14px;border-radius:999px;font-size:13px}.bottomnav a.active{background:rgba(251,146,60,.18);color:#fed7aa}.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#111827;border:1px solid var(--border);border-radius:999px;padding:10px 14px;display:none;z-index:20;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+    canvas{max-height:300px}.empty{color:var(--muted);text-align:center;padding:30px 10px}.monthbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.monthbar input{max-width:180px}
+    @media(max-width:860px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.top{flex-direction:column}h1{font-size:28px}.inputrow{grid-template-columns:1fr}.bottomnav{width:calc(100% - 24px);justify-content:space-around}.bottomnav a{padding:10px 9px}}
+  </style>
+</head>
+<body>
+<div class="toast" id="toast">Saved ✅</div>
+<div class="app">
+  <section class="hero" id="home">
+    <div class="top"><div><span class="badge">💸 Personal MoneyFlow</span><h1>Track your expenses like a mini banking app.</h1><p class="sub">Write: <b>“Monoprix 30 euro”</b>, upload a receipt/screenshot, and keep a clear view of where your money goes.</p></div><button class="btn secondary" onclick="exportCSV()">Export CSV</button></div>
+    <div class="stats">
+      <div class="stat"><small>This month spent</small><b id="totalMonth">0 €</b></div>
+      <div class="stat"><small>Biggest category</small><b id="topCategory">-</b></div>
+      <div class="stat"><small>Transactions</small><b id="txCount">0</b></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card" id="add">
+      <div class="section-title"><h2>➕ Add expense by text</h2><span class="pill">AI-like parser</span></div>
+      <div class="inputrow"><input id="quickText" class="input" placeholder="Example: I was in Monoprix 30 euro"/><button class="btn" onclick="quickAdd()">Add</button></div>
+      <p class="hint">The app detects amount + merchant + category. Examples: “Uber 12€”, “restaurant 45”, “salaire 2700”, “Monoprix 30 euro”.</p>
+      <div class="formgrid">
+        <input id="merchant" class="input" placeholder="Merchant / note" />
+        <input id="amount" class="input" type="number" step="0.01" placeholder="Amount" />
+        <select id="category"></select>
+      </div>
+      <div class="actions"><button class="btn" onclick="manualAdd()">Save expense</button><button class="btn secondary" onclick="fillDemo()">Add demo data</button><button class="btn danger" onclick="clearAll()">Reset</button></div>
+
+      <label class="drop" for="receiptInput">📸 Tap here to upload receipt / screenshot<br><span class="mini">MVP: image is previewed. Full OCR/AI needs backend or API.</span></label>
+      <input id="receiptInput" type="file" accept="image/*" onchange="previewReceipt(event)">
+      <img id="preview" class="preview" />
+      <p class="hint">For the real version: OCR reads ticket → AI extracts merchant/items → category is selected automatically.</p>
+    </section>
+
+    <section class="card" id="dashboard">
+      <div class="section-title"><h2>📊 Dashboard</h2><span class="pill" id="monthLabel"></span></div>
+      <canvas id="catChart"></canvas>
+      <div class="monthbar"><input id="budget" class="input" type="number" placeholder="Monthly budget €" oninput="saveBudget()"><span class="pill" id="budgetStatus">Budget not set</span></div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="section-title"><h2>🧾 Latest expenses</h2><span class="pill">local saved</span></div>
+      <div id="list" class="list"></div>
+    </section>
+    <section class="card">
+      <div class="section-title"><h2>📈 Daily spending</h2><span class="pill">last 30 days</span></div>
+      <canvas id="dailyChart"></canvas>
+    </section>
+  </div>
+</div>
+<nav class="bottomnav"><a href="#home" class="active">Home</a><a href="#add">Add</a><a href="#dashboard">Charts</a><a href="#list">History</a></nav>
+<script>
+const cats = {
+  "Courses": {emoji:"🛒", keys:["monoprix","carrefour","lidl","auchan","franprix","supermarket","market","courses","grocery"]},
+  "Restaurant": {emoji:"🍽️", keys:["restaurant","resto","mcdonald","kfc","pizza","burger","cafe","coffee","starbucks","deliveroo","ubereats"]},
+  "Transport": {emoji:"🚕", keys:["uber","bolt","taxi","ratp","sncf","train","metro","essence","parking","transport"]},
+  "Shopping": {emoji:"🛍️", keys:["zara","nike","amazon","asos","shopping","clothes","vetement"]},
+  "Santé": {emoji:"💊", keys:["pharmacie","doctor","dentiste","sante","medical"]},
+  "Sport": {emoji:"🏋️", keys:["gym","basic fit","fitness","sport","decathlon"]},
+  "Maison": {emoji:"🏠", keys:["loyer","rent","edf","sfr","orange","internet","maison"]},
+  "Voyage": {emoji:"✈️", keys:["hotel","booking","airbnb","flight","avion","travel","voyage"]},
+  "Revenu": {emoji:"💰", keys:["salaire","salary","revenu","income","remboursement"]},
+  "Autre": {emoji:"✨", keys:[]}
+};
+let expenses = JSON.parse(localStorage.getItem('expenses_v1')||'[]');
+let budget = localStorage.getItem('budget_v1')||'';
+const catSelect=document.getElementById('category'); Object.keys(cats).forEach(c=>{let o=document.createElement('option');o.value=c;o.textContent=`${cats[c].emoji} ${c}`;catSelect.appendChild(o)});document.getElementById('budget').value=budget;
+let catChart, dailyChart;
+function money(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n||0)}
+function parseExpense(text){const lower=text.toLowerCase(); const amountMatch=lower.match(/(\d+[\.,]?\d*)\s*(€|euro|eur)?/); const amount=amountMatch?parseFloat(amountMatch[1].replace(',','.')):0; let category='Autre'; for(const [cat,data] of Object.entries(cats)){ if(data.keys.some(k=>lower.includes(k))){category=cat;break;} } if(["salaire","salary","income","revenu"].some(k=>lower.includes(k))) category='Revenu'; let merchant=text.replace(/(\d+[\.,]?\d*)\s*(€|euro|eur)?/i,'').replace(/i was in|j'étais à|chez|a|à/gi,'').trim(); merchant=merchant || text || 'Expense'; return {merchant, amount, category};}
+function quickAdd(){const text=document.getElementById('quickText').value.trim(); if(!text)return; const p=parseExpense(text); addExpense(p.merchant,p.amount,p.category,text); document.getElementById('quickText').value='';}
+function manualAdd(){const merchant=document.getElementById('merchant').value.trim()||'Expense'; const amount=parseFloat(document.getElementById('amount').value); const category=document.getElementById('category').value; if(!amount)return toast('Add an amount ⚠️'); addExpense(merchant,amount,category); document.getElementById('merchant').value='';document.getElementById('amount').value='';}
+function addExpense(merchant,amount,category,raw=''){ expenses.unshift({id:Date.now(),date:new Date().toISOString(),merchant,amount,category,raw}); save(); toast('Expense saved ✅');}
+function save(){localStorage.setItem('expenses_v1',JSON.stringify(expenses)); render();}
+function saveBudget(){budget=document.getElementById('budget').value;localStorage.setItem('budget_v1',budget);render();}
+function currentMonth(e){const d=new Date(e.date), n=new Date(); return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}
+function render(){ const monthExpenses=expenses.filter(currentMonth); const spent=monthExpenses.filter(e=>e.category!=='Revenu').reduce((s,e)=>s+e.amount,0); document.getElementById('totalMonth').textContent=money(spent); document.getElementById('txCount').textContent=monthExpenses.length; document.getElementById('monthLabel').textContent=new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const byCat={}; monthExpenses.filter(e=>e.category!=='Revenu').forEach(e=>byCat[e.category]=(byCat[e.category]||0)+e.amount); const top=Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0]; document.getElementById('topCategory').textContent=top?`${cats[top[0]].emoji} ${top[0]}`:'-';
+  const budgetVal=parseFloat(budget||0); const b=document.getElementById('budgetStatus'); if(budgetVal){const left=budgetVal-spent;b.textContent= left>=0 ? `${money(left)} left` : `${money(Math.abs(left))} over`; b.style.color=left>=0?'#bbf7d0':'#fecaca'} else b.textContent='Budget not set';
+  const list=document.getElementById('list'); list.innerHTML=''; if(!expenses.length) list.innerHTML='<div class="empty">No expenses yet. Add your first one 👆</div>'; expenses.slice(0,30).forEach(e=>{const div=document.createElement('div');div.className='item';div.innerHTML=`<div class="left"><div class="emoji">${cats[e.category]?.emoji||'✨'}</div><div><div class="name">${e.merchant}</div><div class="meta">${e.category} • ${new Date(e.date).toLocaleDateString('fr-FR')}</div></div></div><div><div class="amount">${e.category==='Revenu'?'+':'-'}${money(e.amount)}</div><div class="mini" onclick="deleteExpense(${e.id})" style="cursor:pointer">Delete</div></div>`;list.appendChild(div)});
+  drawCharts(byCat);
+}
+function drawCharts(byCat){ const labels=Object.keys(byCat), data=Object.values(byCat); if(catChart)catChart.destroy(); catChart=new Chart(document.getElementById('catChart'),{type:'doughnut',data:{labels,datasets:[{data}]},options:{plugins:{legend:{labels:{color:'#cbd5e1'}}}}});
+ const days={}; for(let i=29;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);days[d.toISOString().slice(0,10)]=0} expenses.filter(e=>e.category!=='Revenu').forEach(e=>{let k=e.date.slice(0,10); if(k in days)days[k]+=e.amount}); if(dailyChart)dailyChart.destroy(); dailyChart=new Chart(document.getElementById('dailyChart'),{type:'bar',data:{labels:Object.keys(days).map(d=>d.slice(5)),datasets:[{label:'€ spent',data:Object.values(days)}]},options:{scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}}},plugins:{legend:{labels:{color:'#cbd5e1'}}}}});}
+function deleteExpense(id){expenses=expenses.filter(e=>e.id!==id);save();}
+function clearAll(){if(confirm('Delete all expenses?')){expenses=[];save();}}
+function previewReceipt(ev){const file=ev.target.files[0]; if(!file)return; const img=document.getElementById('preview'); img.src=URL.createObjectURL(file); img.style.display='block'; toast('Image added. OCR comes in next version 📸');}
+function exportCSV(){let csv='date,merchant,category,amount,raw\n'+expenses.map(e=>`"${e.date}","${e.merchant}","${e.category}",${e.amount},"${e.raw||''}"`).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='expenses.csv';a.click();}
+function fillDemo(){[['Monoprix',30,'Courses'],['Uber',12,'Transport'],['Restaurant',42,'Restaurant'],['Basic Fit',29.99,'Sport'],['Amazon',65,'Shopping'],['Pharmacie',18,'Santé']].forEach(x=>expenses.unshift({id:Date.now()+Math.random(),date:new Date().toISOString(),merchant:x[0],amount:x[1],category:x[2],raw:''}));save();}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',1800)}
+render();
+</script>
+</body>
+</html>
